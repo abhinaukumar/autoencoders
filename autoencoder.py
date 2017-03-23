@@ -5,20 +5,6 @@ Created on Wed Mar 22 19:21:12 2017
 @author: nownow
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar  8 11:09:40 2017
-
-@author: nownow
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar  5 13:01:36 2017
-
-@author: nownow
-"""
-
 from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, UpSampling2D
 from keras.models import Model,Sequential
 import numpy as np
@@ -46,7 +32,7 @@ print("Read dataset");
 
 #model
 
-input_img = Input(shape=(1, 64, 64))
+input_img = Input(shape=(1, 28, 28))
 
 x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -61,14 +47,14 @@ x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(encoded)
 x = UpSampling2D((2, 2))(x)
 x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(x)
 x = UpSampling2D((2, 2))(x)
-x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(16, 3, 3, activation='relu')(x)
 x = UpSampling2D((2, 2))(x)
 decoded = Convolution2D(1, 3, 3, activation='relu', border_mode='same')(x)
 
 autoencoder = Model(input_img, decoded)
-autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
+autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
 
 
 print("Model created and compiled")
 
-autoencoder.fit(x_train,x_train,nb_epoch = 50, batch_size = 128, shuffle = False, validation_data=(x_test, x_test),verbose = 2, callbacks=[TensorBoard(log_dir='/tmp/mnist_autoencoder')])
+autoencoder.fit(x_train,x_train,nb_epoch = 150, batch_size = 32, shuffle = False, validation_data=(x_test, x_test),verbose = 2)
