@@ -25,7 +25,10 @@ def load_dataset():
     
     y_train_cat = keras.utils.np_utils.to_categorical(y_train,nb_classes = 10)
     y_test_cat = keras.utils.np_utils.to_categorical(y_test, nb_classes = 10)
-        
+    
+    y_train_cat = y_train_cat.astype('float32')
+    y_test_cat = y_test_cat.astype('float32')
+    
     x_train = np.reshape(x_train, (len(x_train), 1, 28, 28))  # adapt this if using `channels_first` image data format
     x_test = np.reshape(x_test, (len(x_test), 1, 28, 28))  # adapt this if using `channels_first` image data format
     
