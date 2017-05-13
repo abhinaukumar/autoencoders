@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Apr 16 14:41:18 2017
+
+@author: nownow
+"""
+
 '''This script demonstrates how to build a variational autoencoder with Keras.
 Reference: "Auto-Encoding Variational Bayes" https://arxiv.org/abs/1312.6114
 '''
@@ -14,7 +21,7 @@ from keras.datasets import mnist
 
 batch_size = 100
 original_dim = 784
-latent_dim = 2
+latent_dim = 4
 intermediate_dim = 256
 epochs = 50
 epsilon_std = 1.0
@@ -39,7 +46,7 @@ z_log_var = Dense(latent_dim)(h)
         
 def sampling(args):
     z_mean, z_log_var = args
-    epsilon = K.random_normal(shape=(100, 2), mean=0.,
+    epsilon = K.random_normal(shape=(100, 4), mean=0.,
                               std=1.)
     return z_mean + K.exp(z_log_var / 2) * epsilon
 
@@ -109,7 +116,7 @@ y_test_cat = y_test_cat.astype('float32')
 
 vae.fit([x_train, y_train_cat],x_train,
         shuffle=True,
-        nb_epoch=100,
+        nb_epoch=60,
         batch_size=batch_size,
         validation_data=([x_test, y_test_cat], x_test))
 

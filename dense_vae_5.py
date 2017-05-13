@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Apr 16 19:23:08 2017
+
+@author: nownow
+"""
+
 '''This script demonstrates how to build a variational autoencoder with Keras.
 Reference: "Auto-Encoding Variational Bayes" https://arxiv.org/abs/1312.6114
 '''
@@ -24,6 +31,7 @@ x = Input(shape=(original_dim,))
 h = Dense(intermediate_dim, activation='relu')(x)
 z_mean = Dense(latent_dim)(h)
 z_log_var = Dense(latent_dim)(h)
+class_est = Dense(10, activation = 'sigmoid')(h)
 
 
 #class SamplingLayer(Layer):
@@ -55,14 +63,16 @@ def merge_routine(args):
     return rep_code*class_vec
 # note that "output_shape" isn't necessary with the TensorFlow backend
 z = Merge(mode = sampling, output_shape = (latent_dim,))([z_mean, z_log_var])
-class_in = Input(shape=(10,))
+#class_in = Input(shape=(1,))
 #z = Merge(mode = 'concat', concat_axis=1)([z, class_in])
 # we instantiate these layers separately so as to reuse them later
 merge_stuff = Merge(mode = 'concat',concat_axis=1)
 #merge_stuff = Merge(mode = 'concat', concat_axis=1)
 decoder_h = Dense(intermediate_dim, activation='relu')
 decoder_mean = Dense(original_dim, activation='sigmoid')
+class_code = Dense(10, activation = 'sigmoid')
 
+class_in = class_code(class_est)
 z = merge_stuff([z,class_in])
 h_decoded = decoder_h(z)
 x_decoded_mean = decoder_mean(h_decoded)
@@ -101,17 +111,20 @@ x_test = x_test.astype('float32') / 255.
 x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
 x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
 
-y_train_cat = keras.utils.np_utils.to_categorical(y_train,nb_classes = 10)
-y_test_cat = keras.utils.np_utils.to_categorical(y_test, nb_classes = 10)
-    
-y_train_cat = y_train_cat.astype('float32')
-y_test_cat = y_test_cat.astype('float32')
+#y_train_cat = keras.utils.np_utils.to_categorical(y_train,nb_classes = 10)
+#y_test_cat = keras.utils.np_utils.to_categorical(y_test, nb_classes = 10)
+#    
+#y_train_cat = y_train_cat.astype('float32')
+#y_test_cat = y_test_cat.astype('float32')
 
-vae.fit([x_train, y_train_cat],x_train,
+y_train = y_train.astype('float32')
+y_test = y_test.astype('float32')
+
+vae.fit([x_train, y_train],x_train,
         shuffle=True,
         nb_epoch=100,
         batch_size=batch_size,
-        validation_data=([x_test, y_test_cat], x_test))
+        validation_data=([x_test, y_test], x_test))
 
 # build a model to project inputs on the latent space
 encoder = Model(x, z_mean)
@@ -125,7 +138,7 @@ plt.show()
 
 # build a digit generator that can sample from the learned distribution
 decoder_input = Input(shape=(latent_dim,))
-class_input=  Input(shape = (10,))
+class_input=  Input(shape = (1,))
 
 _merge_decoded = keras.layers.merge([decoder_input, class_input], mode = 'concat', concat_axis=1)
 _h_decoded = decoder_h(_merge_decoded)
@@ -141,12 +154,12 @@ figure = np.zeros((digit_size * n, digit_size * n))
 grid_x = norm.ppf(np.linspace(0.05, 0.95, n))
 grid_y = norm.ppf(np.linspace(0.05, 0.95, n))
 for k in range(10):
-    class_vec = np.zeros((10,1))
-    class_vec[k] = 1
+    #class_vec = np.zeros((10,1))
+    #class_vec[k] = 1
     for i, yi in enumerate(grid_x):
         for j, xi in enumerate(grid_y):
             z_sample = np.array([[xi, yi]])
-            x_decoded = generator.predict([z_sample, np.transpose(class_vec)])
+            x_decoded = generator.predict([z_sample, np.array([k])])
             digit = x_decoded[0].reshape(digit_size, digit_size)
             figure[i * digit_size: (i + 1) * digit_size,
                    j * digit_size: (j + 1) * digit_size] = digit              
