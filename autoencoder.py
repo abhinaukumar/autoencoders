@@ -16,7 +16,7 @@ from keras.datasets import mnist
 import os
 #import tensorflow as tf
 import numpy as np
-from PIL import Image
+#from PIL import Image
 import cv2
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -54,7 +54,7 @@ decoded = Convolution2D(1, 3, 3, activation='relu', border_mode='same')(x)
 autoencoder = Model(input_img, decoded)
 autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
 
-
+autoencoder.summary()
 print("Model created and compiled")
 
 autoencoder.fit(x_train,x_train,nb_epoch = 150, batch_size = 32, shuffle = False, validation_data=(x_test, x_test),verbose = 2)

@@ -4,6 +4,7 @@ Reference: "Auto-Encoding Variational Bayes" https://arxiv.org/abs/1312.6114
 import numpy as np
 import keras
 import matplotlib.pyplot as plt
+plt.ion()
 from scipy.stats import norm
 
 from keras.layers import Input, Dense, Merge
@@ -12,11 +13,13 @@ from keras import backend as K
 from keras import metrics
 from keras.datasets import mnist
 
+from keras.callbacks import TensorBoard
+
 batch_size = 100
 original_dim = 784
 latent_dim = 2
 intermediate_dim = 256
-epochs = 50
+epochs = 10
 epsilon_std = 1.0
 
 
@@ -40,7 +43,7 @@ z_log_var = Dense(latent_dim)(h)
 def sampling(args):
     z_mean, z_log_var = args
     epsilon = K.random_normal(shape=(100, 2), mean=0.,
-                              std=1.)
+                              stddev=1.)
     return z_mean + K.exp(z_log_var / 2) * epsilon
 
 def merge_routine(args):
@@ -75,7 +78,8 @@ x_decoded_mean = decoder_mean(h_decoded)
 #        super(CustomVariationalLayer, self).__init__(**kwargs)
 
 def vae_loss(x, x_decoded_mean):
-    xent_loss = original_dim * metrics.binary_crossentropy(x, x_decoded_mean)
+    
+    xent_loss = original_dim*(metrics.mean_squared_error(x, x_decoded_mean))
     kl_loss = - 0.5 * K.sum(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
     return K.mean(xent_loss + kl_loss)
 
@@ -101,27 +105,21 @@ x_test = x_test.astype('float32') / 255.
 x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
 x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
 
-y_train_cat = keras.utils.np_utils.to_categorical(y_train,nb_classes = 10)
-y_test_cat = keras.utils.np_utils.to_categorical(y_test, nb_classes = 10)
+y_train_cat = keras.utils.np_utils.to_categorical(y_train,num_classes = 10)
+y_test_cat = keras.utils.np_utils.to_categorical(y_test, num_classes = 10)
     
 y_train_cat = y_train_cat.astype('float32')
 y_test_cat = y_test_cat.astype('float32')
-
-vae.fit([x_train, y_train_cat],x_train,
-        shuffle=True,
-        nb_epoch=100,
-        batch_size=batch_size,
-        validation_data=([x_test, y_test_cat], x_test))
 
 # build a model to project inputs on the latent space
 encoder = Model(x, z_mean)
 
 # display a 2D plot of the digit classes in the latent space
-x_test_encoded = encoder.predict(x_test, batch_size=batch_size)
-plt.figure(figsize=(6, 6))
-plt.scatter(x_test_encoded[:, 0], x_test_encoded[:, 1], c=y_test)
-plt.colorbar()
-plt.show()
+#x_test_encoded = encoder.predict(x_test, batch_size=batch_size)
+#plt.figure(figsize=(6, 6))
+#plt.scatter(x_test_encoded[:, 0], x_test_encoded[:, 1], c=y_test)
+#plt.colorbar()
+#plt.show()
 
 # build a digit generator that can sample from the learned distribution
 decoder_input = Input(shape=(latent_dim,))
@@ -131,6 +129,24 @@ _merge_decoded = keras.layers.merge([decoder_input, class_input], mode = 'concat
 _h_decoded = decoder_h(_merge_decoded)
 _x_decoded_mean = decoder_mean(_h_decoded)
 generator = Model(input = [decoder_input, class_input], output = _x_decoded_mean)
+
+for i in range(epochs):
+    print("Epoch: ",i)
+    vae.fit([x_train, y_train_cat],x_train,
+        shuffle=True,
+        epochs=1,
+        batch_size=batch_size,
+        validation_data=([x_test, y_test_cat], x_test),callbacks=[TensorBoard(log_dir='/tmp/autoencoder')])
+    a = "0123456789"    
+    vector = np.random.normal(size = [len(a),latent_dim])
+    class_input = np.zeros(shape=[len(a),10])
+    for i in range(len(a)):
+        class_input[i][int(a[i])] = 1    
+    
+    pred1 = generator.predict([vector,class_input])
+    pred2 = np.reshape(pred1,(len(a)*28,28))
+    plt.imsave('epoch_op.png',pred2, cmap = 'Greys_r')
+
 
 # display a 2D manifold of the digits
 n = 15  # figure with 15x15 digits
