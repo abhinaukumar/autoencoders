@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jun 25 12:31:32 2017
+Created on Sun Jul  2 21:05:20 2017
 
 @author: nownow
 """
@@ -36,7 +36,7 @@ batch_size = 100
 original_dim = 784
 latent_dim = 2
 intermediate_dim = 256
-epochs = 15
+epochs = 3
 epsilon_std = 1.0
 
 def sampling(args):
@@ -48,9 +48,9 @@ def sampling(args):
 input_img = Input(shape=(1, 28, 28))
 class_in = Input(shape=(10,))
     
-conv_1 = Conv2D(64, (3,3), activation='relu', padding='same') # 28x28
+conv_1 = Conv2D(4, (3,3), activation='relu', padding='same') # 28x28
 pool_1 = MaxPooling2D((2, 2), padding='same') # 14x14
-conv_2 = Conv2D(32, (3,3), activation='relu', padding='same') # 14x14
+conv_2 = Conv2D(8, (3,3), activation='relu', padding='same') # 14x14
 pool_2 = MaxPooling2D((2, 2), padding='same') # 7x7
 conv_3 = Conv2D(16, (3,3), activation='relu', padding='same') # 7x7
 pool_3 = MaxPooling2D((2, 2), padding='same') # 4x4
@@ -110,9 +110,9 @@ reshape_1 = Reshape((16,4,4))
 #up_7 = UpSampling2D((2, 2)) # 4x4
 conv_8 = Conv2D(16, (3,3), activation='relu', padding='same') # 4x4
 up_8 = UpSampling2D((2, 2)) # 8x8
-conv_9 = Conv2D(32, (3,3), activation='relu', padding='same') # 8x8
+conv_9 = Conv2D(8, (3,3), activation='relu', padding='same') # 8x8
 up_9 = UpSampling2D((2, 2)) # 16x16
-conv_10 = Conv2D(64, (3,3), activation='relu') # 14x14
+conv_10 = Conv2D(4, (3,3), activation='relu') # 14x14
 up_10 = UpSampling2D((2, 2)) # 28x28
 conv_11 = Conv2D(1, (3,3), activation='sigmoid', padding='same') # 28x28
 
@@ -147,8 +147,9 @@ def vae_loss(_x, _x_decoded_mean):
     return K.mean(xent_loss + kl_loss)
     #return K.mean(kl_loss)
     
-#vae.load_weights('conv_vae_adam_final.h5')
+vae.load_weights('/home/nownow/Documents/projects/idp_summer_2017/saved_model/conv_vae_2_final_weights_2.h5')
 
+#opt = keras.optimizers.SGD(momentum=0.9)
 vae.compile(optimizer='adadelta', loss=vae_loss)
 
 #encoder= Model(input_img,encoded)
@@ -191,6 +192,8 @@ y_test_cat = y_test_cat.astype('float32')
 
 #vae.fit([x_train,y_train_cat], x_train, epochs=5, validation_data=([x_test,y_test_cat],x_test), batch_size=1000)
 
+#vae.load_weights('/home/nownow/Documents/projects/idp_summer_2017/saved_model/conv_vae_2_21_12_Jul_4_best.h5')
+
 a = "0123456789"    
 vector = np.random.normal(size = [len(a),latent_dim])
 class_input = np.zeros(shape=[len(a),10])
@@ -217,14 +220,17 @@ plt.imsave('init_op.png',pred2, cmap = 'Greys_r')
 #    pred1 = decoder.predict([vector,class_input])
 #    pred2 = np.reshape(pred1,(len(a)*28,28))
 #    plt.imsave('epoch_op.png',pred2, cmap = 'Greys_r')
-vae.load_weights('conv_vae_22_45_Jun_30_best.h5')
-#callbacks =  [keras.callbacks.ModelCheckpoint('conv_vae_22_45_Jun_30_best.h5',save_best_only=True,save_weights_only=True), 
-callbacks =  [keras.callbacks.TensorBoard(log_dir='/tmp/conv_vae_logs', write_grads=True, write_graph=True,write_images=True,batch_size=batch_size)]
+#vae.load_weights('/home/nownow/Documents/projects/idp_summer_2017/saved_model/conv_vae_2_best_weights.h5')
+
+
+#callbacks =  [keras.callbacks.ModelCheckpoint('/home/nownow/Documents/projects/idp_summer_2017/saved_model/conv_vae_2_11_43_Jul_11_best.h5',save_best_only=True,save_weights_only=True), 
+#    keras.callbacks.TensorBoard(log_dir='/tmp/conv_vae_logs', write_grads=True, write_graph=True,write_images=True,batch_size=batch_size), 
+#    keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=0.0001)]
 vae.fit([x_train, y_train_cat],x_train,
         shuffle=True,
         epochs=epochs,
         batch_size=batch_size,
-        validation_data=([x_test, y_test_cat], x_test),callbacks=callbacks)
+        validation_data=([x_test, y_test_cat], x_test))#,callbacks=callbacks)
 
 #vae.save_weights('conv_vae_22_45_Jun_30_final.h5')
 n = 15  # figure with 15x15 digits

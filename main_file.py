@@ -8,10 +8,9 @@ Created on Sun Apr 16 15:28:27 2017
 import keras
 
 import manifold_script
-a = str(input("Enter number: "))
+a = str(raw_input("Enter number: "))
 
-path_to_file = ""
-
+path_to_file = "/home/nownow/Documents/projects/idp_summer_2017/saved_model/conv_decoder_must_be_best_model.json"
 generator = keras.models.load_model(path_to_file)
 manifold_script.show_digits(generator,a)
 
