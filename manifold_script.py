@@ -16,7 +16,6 @@ def show_manifold(generator,digit):
     # linearly spaced coordinates on the unit square were transformed through the inverse CDF (ppf) of the Gaussian
     # to produce values of the latent variables z, since the prior of the latent space is Gaussian
     
-    #for k in range(10):
     class_vec = np.zeros(shape = [1,10])
 
     class_vec[0,digit] = 1
@@ -32,7 +31,7 @@ def show_manifold(generator,digit):
             figure[i * digit_size: (i + 1) * digit_size,
                    j * digit_size: (j + 1) * digit_size] = digit              
     plt.figure(figsize=(10, 10))
-    plt.imshow(figure, cmap='Greys_r')
+    plt.imshow(figure, cmap=plt.cm.gray)
     plt.show()
 
 def show_digits(generator,a):
